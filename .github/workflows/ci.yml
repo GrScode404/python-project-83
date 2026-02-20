@@ -1,0 +1,49 @@
+name: Python CI
+
+on:
+  push:
+    branches:
+      - main
+      - '**'
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Клонируем репозиторий
+      - uses: actions/checkout@v4
+
+      # 2. Настраиваем Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 3. Устанавливаем uv и зависимости проекта
+      - name: Install dependencies
+        run: |
+          pip install uv
+          make install
+
+      # 4. Линтер
+      - name: Run linter
+        run: make lint
+
+      #5. Тесты с покрытием
+      - name: Run test coverage
+        run: make test-coverage
+
+      # 6. SonarQube
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=GrScode404_python-project-83
+            -Dsonar.organization=grscode404
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.coverage.exclusions=tests/**
+            -Dsonar.exclusions=tests/**
