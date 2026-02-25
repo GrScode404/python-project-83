@@ -14,7 +14,7 @@ fixlint:
 	uv run ruff check --fix page_analyzer
 
 test:
-	uv run python -m pytest
+	uv run pytest
 
 test-coverage:
 	uv run pytest --cov=page_analyzer --cov-report=xml:coverage.xml
