@@ -5,7 +5,7 @@ install:
 	uv sync
 
 dev:
-	uv run flask --debug --app page_analyzer:app run
+	uv run flask --debug --app page_analyzer:app run --port $(PORT)
 
 lint:
 	uv run ruff check page_analyzer
@@ -14,7 +14,7 @@ fixlint:
 	uv run ruff check --fix page_analyzer
 
 test:
-	uv run pytest
+	uv run python -m pytest
 
 test-coverage:
 	uv run pytest --cov=page_analyzer --cov-report=xml:coverage.xml
