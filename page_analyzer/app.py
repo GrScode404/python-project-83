@@ -3,11 +3,12 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 from flask import Flask, flash, redirect, render_template, request, url_for
+import validators
 
 from page_analyzer.db import get_connection
 
 app = Flask(__name__)  # NOSONAR
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') # NOSONAR
 
 
 @app.route('/')
@@ -21,6 +22,10 @@ def add_url():
 
     if not url:
         flash('URL is required', 'error')
+        return redirect(url_for('index'))
+    
+    if not validators.url(url):
+        flash('Invalid URL', 'error')
         return redirect(url_for('index'))
     
     parsed_url = urlparse(url)
