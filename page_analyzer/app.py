@@ -9,6 +9,7 @@ app = Flask(__name__)  # NOSONAR
 def index():
     return render_template('index.html')
 
+
 @app.route('/test-db')
 def test_db():
     conn = get_connection()
