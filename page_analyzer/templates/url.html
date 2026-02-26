@@ -60,6 +60,11 @@
                 {% endfor %}
             </tbody>
         </table>
+        <form action="{{ url_for('run_check', id=url.id) }}" method="post">
+            <button type="submit" class="btn btn-success">
+                Start the check
+            </button>
+        </form>
 
         <a href="/urls" class="btn btn-primary">Back</a>
     </div>

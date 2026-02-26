@@ -21,12 +21,16 @@ def add_url():
     url = request.form.get('url')
 
     if not url:
-        flash('URL is required', 'error')
-        return redirect(url_for('index'))
+        flash('URL is required', 'danger')
+        return render_template('index.html'), 422
+    
+    if len(url) > 255:
+        flash('URL must be less than 255 characters', 'danger')
+        return render_template('index.html'), 422    
     
     if not validators.url(url):
-        flash('Invalid URL', 'error')
-        return redirect(url_for('index'))
+        flash('Invalid URL', 'danger')
+        return render_template('index.html'), 422
     
     parsed_url = urlparse(url)
     normalized_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
