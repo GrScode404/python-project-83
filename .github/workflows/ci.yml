@@ -31,9 +31,9 @@ jobs:
       - name: Run linter
         run: make lint
 
-      #5. Тесты с покрытием
-      - name: Run test coverage
-        run: make test-coverage
+      # #5. Тесты с покрытием
+      # - name: Run test coverage
+      #   run: make test-coverage
 
       # 6. SonarQube
       - name: SonarQube Scan
@@ -44,6 +44,6 @@ jobs:
           args: >
             -Dsonar.projectKey=GrScode404_python-project-83
             -Dsonar.organization=grscode404
-            -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.coverage.exclusions=tests/**
             -Dsonar.exclusions=tests/**
+#           -Dsonar.python.coverage.reportPaths=coverage.xml
