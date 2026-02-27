@@ -44,7 +44,7 @@ def add_url():
             existing = cur.fetchone()
 
             if existing:
-                url_id = existing[0]
+                url_id = existing['id']
                 flash('URL already exists', 'info')
             else:
                 cur.execute(
@@ -55,7 +55,7 @@ def add_url():
                     """,
                     (normalized_url, datetime.now())
                 )
-                url_id = cur.fetchone()[0]
+                url_id = cur.fetchone()['id']
                 conn.commit()
                 flash('URL added successfully', 'success')
 
