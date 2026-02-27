@@ -20,13 +20,14 @@
                 {% endfor %}
             {% endif %}
          {% endwith %}
-        <h1>URLs</h1>
+        <h1>Сайты</h1>
         <table class="table table-bordered table-hover mt-4" data-test="urls">
             <thead class="table-light">
                 <tr>
                     <th>ID</th>
-                    <th>Name</th>
-                    <th>Created At</th>
+                    <th>Имя</th>
+                    <th>Последняя проверка</th>
+                    <th>Код ответа</th>
                 </tr>
             </thead>
             <tbody>
@@ -38,12 +39,21 @@
                             {{ url.name }}
                         </a>
                     </td>
-                    <td>{{ url.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        {% if url.last_check %}
+                            {{ url.last_check.strftime('%Y-%m-%d') }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if url.last_check %}
+                            {{ url.last_check.status_code }}
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <a href="/" class="btn btn-primary">Back</a>
+        <a href="/" class="btn btn-primary">Назад</a>
     </div>
 </body>
 </html>

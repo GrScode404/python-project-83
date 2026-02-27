@@ -20,42 +20,48 @@
                 {% endfor %}
             {% endif %}
          {% endwith %}
-        <h1>URL Details</h1>
+        <h1>Сайт: {{ url.name }}</h1>
         
-        <table class="table table-bordered">
+        <table class="table table-bordered" data-test="url">
             <tr>
                 <th>ID</th>
                 <td>{{ url.id }}</td>
             </tr>
             <tr>
-                <th>URL</th>
+                <th>Имя</th>
                 <td><a href="{{ url.name }}" target="_blank">{{ url.name }}</a></td>
             </tr>
             <tr>
-                <th>Created At</th>
-                <td>{{ url.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <th>Дата создания</th>
+                <td>{{ url.created_at.strftime('%Y-%m-%d') }}</td>
             </tr>
         </table>
 
-        <h2>Checks</h2>
-        <table class="table table-striped" data-test="url">
+        <h2>Проверки</h2>
+        <form method="post" action="{{ url_for('check_url', id=url.id) }}" class="mb-3">
+            <input type="submit" value="Запустить проверку" class="btn btn-primary mb-3">
+        </form>
+
+        <table class="table table-striped" data-test="checks">
             <thead>
                 <tr>
-                    <th>Status Code</th>
-                    <th>Title</th>
-                    <th>H1</th>
-                    <th>Description</th>
-                    <th>Checked At</th>
+                    <th>ID</th>
+                    <th>Код ответа</th>
+                    <th>h1</th>
+                    <th>title</th>                    
+                    <th>description</th>
+                    <th>Дата создания</th>
                 </tr>
             </thead>
             <tbody>
-                {% for check in url.checks %}
+                {% for check in checks %}
                 <tr>
-                    <td>{{ check.status_code }}</td>
-                    <td>{{ check.title }}</td>
-                    <td>{{ check.h1 }}</td>
-                    <td>{{ check.description }}</td>
-                    <td>{{ check.created_at }}</td>
+                    <td>{{ check.id }}</td>
+                    <td>{{ check.status_code or '' }}</td>
+                    <td>{{ check.h1 or ''}}</td>
+                    <td>{{ check.title or '' }}</td>
+                    <td>{{ check.description or '' }}</td>
+                    <td>{{ check.created_at.strftime('%Y-%m-%d') }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

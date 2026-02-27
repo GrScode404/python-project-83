@@ -70,14 +70,20 @@ def show_url(id):
                 'SELECT id, name, created_at FROM urls WHERE id = %s',
                 (id,)
             )
-            row = cur.fetchone()
-            url_id = {
-                'id': row[0],
-                'name': row[1],
-                'created_at': row[2]
-            }
+            url = cur.fetchone()
 
-        return render_template('url.html', url=url_id)
+            cur.execute(
+                """
+                SELECT id, status_code, h1, title, description, created_at
+                FROM url_checks
+                WHERE url_id = %s
+                ORDER BY id DESC;
+                """,
+                (id,),
+            )
+            checks = cur.fetchall()
+        
+        return render_template('url.html', url=url, checks=checks)
 
 
 @app.get('/urls')
@@ -85,17 +91,38 @@ def urls():
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                'SELECT id, name, created_at FROM urls ORDER BY id DESC'
+                """
+                SELECT urls.id,
+                    urls.name,
+                    urls.created_at,
+                    MAX(url_checks.created_at) AS last_check
+                FROM urls
+                LEFT JOIN url_checks
+                    ON urls.id = url_checks.url_id
+                GROUP BY urls.id
+                ORDER BY urls.id DESC;
+                """
             )
-            rows = cur.fetchall()
-            
-            urls = [
-                {
-                    'id': row[0],
-                    'name': row[1],
-                    'created_at': row[2]
-                }
-                for row in rows
-            ]
+            urls = cur.fetchall()            
 
         return render_template('urls.html', urls=urls)
+
+
+@app.post('/urls/<int:id>/checks')
+def check_url(id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO url_checks (url_id)
+                VALUES (%s)
+                RETURNING id;
+                """,
+                (id,)                
+            )
+            conn.commit()
+            
+    flash('Check started', 'success')
+    return redirect(url_for('show_url', id=id))
+
+
