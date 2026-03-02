@@ -154,7 +154,11 @@ def check_url(id):
 
                 h1_text = h1.get_text(strip=True) if h1 else None
                 title_text = title.get_text(strip=True) if title else None
-                description_text = description['content'].strip() if description and 'content' in description.attrs else None
+                description_text = (
+                    description['content'].strip() 
+                    if description and 'content' in description.attrs
+                    else None
+                )                
             
             except RequestException:
                 flash('Произошла ошибка при проверке', 'danger')
