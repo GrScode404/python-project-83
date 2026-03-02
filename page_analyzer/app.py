@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from pydoc import html
 from urllib.parse import urlparse
 
 import requests
