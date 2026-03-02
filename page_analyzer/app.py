@@ -1,9 +1,11 @@
 import os
+import requests
+from requests.exceptions import RequestException
 from datetime import datetime
 from urllib.parse import urlparse
 
 import validators
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, url_for, abort
 
 from page_analyzer.db import get_connection
 
@@ -24,6 +26,8 @@ def add_url():
         flash('URL is required', 'danger')
         return render_template('index.html'), 422
     
+    url = url.strip()
+    
     if len(url) > 255:
         flash('URL must be less than 255 characters', 'danger')
         return render_template('index.html'), 422    
@@ -31,7 +35,7 @@ def add_url():
     if not validators.url(url):
         flash('Invalid URL', 'danger')
         return render_template('index.html'), 422
-    
+        
     parsed_url = urlparse(url)
     normalized_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
     
@@ -92,14 +96,19 @@ def urls():
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT urls.id,
+                SELECT
+                    urls.id,
                     urls.name,
-                    urls.created_at,
-                    MAX(url_checks.created_at) AS last_check
+                    uc.status_code,
+                    uc.created_at
                 FROM urls
-                LEFT JOIN url_checks
-                    ON urls.id = url_checks.url_id
-                GROUP BY urls.id
+                LEFT JOIN LATERAL (
+                    SELECT status_code, created_at
+                    FROM url_checks
+                    WHERE url_checks.url_id = urls.id
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                ) uc ON true
                 ORDER BY urls.id DESC;
                 """
             )
@@ -113,12 +122,31 @@ def check_url(id):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
+                'SELECT name FROM urls WHERE id = %s',
+                (id,)
+            )
+            url_data = cur.fetchone()
+
+            if not url_data:
+                abort(404)
+
+            url = url_data['name']
+
+            try:
+                response = requests.get(url, timeout=5)
+                response.raise_for_status()
+            
+            except RequestException:
+                flash('Произошла ошибка при проверке', 'danger')
+                return redirect(url_for('show_url', id=id))
+            
+            cur.execute(
                 """
-                INSERT INTO url_checks (url_id)
-                VALUES (%s)
+                INSERT INTO url_checks (url_id, status_code, created_at)
+                VALUES (%s, %s, %s)
                 RETURNING id;
                 """,
-                (id,)                
+                (id, response.status_code, datetime.now())                
             )
             conn.commit()
             

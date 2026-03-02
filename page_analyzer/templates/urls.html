@@ -40,13 +40,13 @@
                         </a>
                     </td>
                     <td>
-                        {% if url.last_check %}
-                            {{ url.last_check.strftime('%Y-%m-%d') }}
+                        {% if url.created_at %}
+                            {{ url.created_at.strftime('%Y-%m-%d') }}
                         {% endif %}
                     </td>
                     <td>
-                        {% if url.last_check %}
-                            {{ url.last_check.status_code }}
+                        {% if url.status_code %}
+                            {{ url.status_code }}
                         {% endif %}
                     </td>
                 </tr>
