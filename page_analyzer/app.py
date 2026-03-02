@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import requests
 import validators
+from bs4 import BeautifulSoup
 from flask import (
     Flask,
     abort,
@@ -31,17 +32,17 @@ def add_url():
     url = request.form.get('url')
 
     if not url:
-        flash('URL is required', 'danger')
+        flash('Требуется ввести URL', 'danger')
         return render_template('index.html'), 422
     
     url = url.strip()
     
     if len(url) > 255:
-        flash('URL must be less than 255 characters', 'danger')
+        flash('URL должен быть меньше 255 символов', 'danger')
         return render_template('index.html'), 422    
     
     if not validators.url(url):
-        flash('Invalid URL', 'danger')
+        flash('Некорректный URL', 'danger')
         return render_template('index.html'), 422
         
     parsed_url = urlparse(url)
@@ -57,7 +58,7 @@ def add_url():
 
             if existing:
                 url_id = existing['id']
-                flash('URL already exists', 'info')
+                flash('URL уже существует', 'info')
             else:
                 cur.execute(
                     """
@@ -69,7 +70,7 @@ def add_url():
                 )
                 url_id = cur.fetchone()['id']
                 conn.commit()
-                flash('URL added successfully', 'success')
+                flash('URL добавлен успешно', 'success')
 
     return redirect(url_for('show_url', id=url_id))
 
@@ -143,6 +144,17 @@ def check_url(id):
             try:
                 response = requests.get(url, timeout=5)
                 response.raise_for_status()
+
+                hmtl = response.text
+                soup = BeautifulSoup(hmtl, 'html.parser')
+
+                h1 = soup.find('h1')
+                title = soup.find('title')
+                description = soup.find('meta', attrs={'name': 'description'})
+
+                h1_text = h1.get_text(strip=True) if h1 else None
+                title_text = title.get_text(strip=True) if title else None
+                description_text = description['content'].strip() if description and 'content' in description.attrs else None
             
             except RequestException:
                 flash('Произошла ошибка при проверке', 'danger')
@@ -150,11 +162,24 @@ def check_url(id):
             
             cur.execute(
                 """
-                INSERT INTO url_checks (url_id, status_code, created_at)
-                VALUES (%s, %s, %s)
+                INSERT INTO url_checks (
+                    url_id, 
+                    status_code, 
+                    h1, 
+                    title, 
+                    description, 
+                    created_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s)
                 RETURNING id;
                 """,
-                (id, response.status_code, datetime.now())                
+                (
+                    id, 
+                    response.status_code, 
+                    h1_text, 
+                    title_text, 
+                    description_text, 
+                    datetime.now())                
             )
             conn.commit()
             
