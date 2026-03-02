@@ -10,6 +10,24 @@
           crossorigin="anonymous">
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+          Анализатор страниц
+        </a>
+
+        <div class="collapse navbar-collapse">
+          <ul class="navbar-nav ms-3">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('urls') }}">
+                Сайты
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
     <div class="container mt-5">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
