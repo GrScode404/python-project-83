@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from pydoc import html
 from urllib.parse import urlparse
 
 import requests
@@ -145,17 +146,17 @@ def check_url(id):
                 response = requests.get(url, timeout=5)
                 response.raise_for_status()
 
-                hmtl = response.text
-                soup = BeautifulSoup(hmtl, 'html.parser')
+                html = response.text
+                soup = BeautifulSoup(html, 'html.parser')
 
                 h1 = soup.find('h1')
                 title = soup.find('title')
                 description = soup.find('meta', attrs={'name': 'description'})
 
-                h1_text = h1.get_text(strip=True) if h1 else None
-                title_text = title.get_text(strip=True) if title else None
+                h1_text = h1.get_text(strip=True)[:255] if h1 else None
+                title_text = title.get_text(strip=True)[:255] if title else None
                 description_text = (
-                    description['content'].strip() 
+                    description['content'].strip()[:255] 
                     if description and 'content' in description.attrs
                     else None
                 )                
