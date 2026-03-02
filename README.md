@@ -42,12 +42,12 @@ Page Analyzer — это веб-приложение, которое помог�
 
 ### Шаги установки
 
-1. ```Склонируйте репозиторий:
+1. Склонируйте репозиторий:
 
 ```bash
 git clone https://github.com/GrScode404/python-project-83.git
 cd python-project-83
-
+```
 2. Установите зависимости:
 ```bash
 make install
