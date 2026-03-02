@@ -58,7 +58,7 @@ def add_url():
 
             if existing:
                 url_id = existing['id']
-                flash('URL уже существует', 'info')
+                flash('Страница уже существует', 'info')
             else:
                 cur.execute(
                     """
