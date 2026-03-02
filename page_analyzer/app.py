@@ -1,11 +1,19 @@
 import os
-import requests
-from requests.exceptions import RequestException
 from datetime import datetime
 from urllib.parse import urlparse
 
+import requests
 import validators
-from flask import Flask, flash, redirect, render_template, request, url_for, abort
+from flask import (
+    Flask,
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+from requests.exceptions import RequestException
 
 from page_analyzer.db import get_connection
 
