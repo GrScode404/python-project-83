@@ -44,7 +44,7 @@ Page Analyzer — это веб-приложение, которое помог�
 
 1. Клонируйте репозиторий:
 ```bash
-git clone [<repository-url>](https://github.com/GrScode404/python-project-83)
+git clone [<(https://github.com/GrScode404/python-project-83)>]
 cd python-project-83
 ```
 
