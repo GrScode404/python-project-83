@@ -70,7 +70,7 @@ def add_url():
                 )
                 url_id = cur.fetchone()['id']
                 conn.commit()
-                flash('URL добавлен успешно', 'success')
+                flash('Страница успешно добавлена', 'success')
 
     return redirect(url_for('show_url', id=url_id))
 
@@ -183,7 +183,7 @@ def check_url(id):
             )
             conn.commit()
             
-    flash('Check started', 'success')
+    flash('Страница успешно проверена', 'success')
     return redirect(url_for('show_url', id=id))
 
 
