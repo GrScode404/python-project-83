@@ -45,5 +45,6 @@ jobs:
             -Dsonar.projectKey=GrScode404_python-project-83
             -Dsonar.organization=grscode404
             -Dsonar.exclusions=tests/**
+            -Dsonar.coverage.exclusions=**/*
 #           -Dsonar.coverage.exclusions=tests/**
 #           -Dsonar.python.coverage.reportPaths=coverage.xml
