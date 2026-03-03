@@ -46,5 +46,3 @@ jobs:
             -Dsonar.organization=grscode404
             -Dsonar.exclusions=tests/**
             -Dsonar.coverage.exclusions=**/*
-#           -Dsonar.coverage.exclusions=tests/**
-#           -Dsonar.python.coverage.reportPaths=coverage.xml
