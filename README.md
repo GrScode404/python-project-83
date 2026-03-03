@@ -100,27 +100,6 @@ make lint
 make fixlint
 ```
 
-## Структура проекта
-
-```
-page_analyzer/
-├── app.py                 # Основное приложение Flask и маршруты
-├── db.py                  # Функции для работы с БД
-├── templates/             # HTML шаблоны
-│   ├── index.html        # Главная страница
-│   ├── url.html          # Страница отдельного URL-адреса
-│   └── urls.html         # Список всех URL-адресов
-└── __init__.py
-
-tests/                      # Тесты
-├── test_app.py
-└── test_dummy.py
-
-database.sql              # SQL миграции
-Makefile                  # Команды для разработки
-pyproject.toml            # Конфигурация проекта
-```
-
 ## API маршруты
 
 | Метод | Маршрут | Описание |
