@@ -30,20 +30,21 @@ def index():
 @app.post('/urls')
 def add_url():
     url = request.form.get('url')
+    index_html = render_template('index.html')
 
     if not url:
         flash('Требуется ввести URL', 'danger')
-        return render_template('index.html'), 422
+        return index_html, 422
     
     url = url.strip()
     
     if len(url) > 255:
         flash('URL должен быть меньше 255 символов', 'danger')
-        return render_template('index.html'), 422    
+        return index_html, 422    
     
     if not validators.url(url):
         flash('Некорректный URL', 'danger')
-        return render_template('index.html'), 422
+        return index_html, 422
     
     normalized_url = normalize_url(url)
     
