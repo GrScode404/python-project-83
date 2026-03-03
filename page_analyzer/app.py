@@ -1,10 +1,8 @@
 import os
 from datetime import datetime
-from urllib.parse import urlparse
 
 import requests
 import validators
-from bs4 import BeautifulSoup
 from flask import (
     Flask,
     abort,
@@ -16,7 +14,9 @@ from flask import (
 )
 from requests.exceptions import RequestException
 
-from page_analyzer.db import get_connection
+from page_analyzer import db
+from page_analyzer.parser import extract_page_data
+from page_analyzer.url_normalizer import normalize_url
 
 app = Flask(__name__)  # NOSONAR
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')  # NOSONAR
@@ -44,149 +44,61 @@ def add_url():
     if not validators.url(url):
         flash('Некорректный URL', 'danger')
         return render_template('index.html'), 422
-        
-    parsed_url = urlparse(url)
-    normalized_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
     
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                'SELECT id FROM urls WHERE name = %s',
-                (normalized_url,)
-            )
-            existing = cur.fetchone()
-
-            if existing:
-                url_id = existing['id']
-                flash('Страница уже существует', 'info')
-            else:
-                cur.execute(
-                    """
-                    INSERT INTO urls (name, created_at)
-                    VALUES (%s, %s)
-                    RETURNING id
-                    """,
-                    (normalized_url, datetime.now())
-                )
-                url_id = cur.fetchone()['id']
-                conn.commit()
-                flash('Страница успешно добавлена', 'success')
+    normalized_url = normalize_url(url)
+    
+    existing = db.url_exists(normalized_url)
+    if existing:
+        url_id = existing['id']
+        flash('Страница уже существует', 'info')
+    else:
+        url_id = db.create_url(normalized_url, datetime.now())
+        flash('Страница успешно добавлена', 'success')
 
     return redirect(url_for('show_url', id=url_id))
 
 
 @app.get('/urls/<int:id>')
 def show_url(id):
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                'SELECT id, name, created_at FROM urls WHERE id = %s',
-                (id,)
-            )
-            url = cur.fetchone()
-
-            cur.execute(
-                """
-                SELECT id, status_code, h1, title, description, created_at
-                FROM url_checks
-                WHERE url_id = %s
-                ORDER BY id DESC;
-                """,
-                (id,),
-            )
-            checks = cur.fetchall()
-        
-        return render_template('url.html', url=url, checks=checks)
+    url = db.get_url(id)
+    if not url:
+        abort(404)
+    
+    checks = db.get_url_checks(id)
+    return render_template('url.html', url=url, checks=checks)
 
 
 @app.get('/urls')
 def urls():
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT
-                    urls.id,
-                    urls.name,
-                    uc.status_code,
-                    uc.created_at
-                FROM urls
-                LEFT JOIN LATERAL (
-                    SELECT status_code, created_at
-                    FROM url_checks
-                    WHERE url_checks.url_id = urls.id
-                    ORDER BY created_at DESC
-                    LIMIT 1
-                ) uc ON true
-                ORDER BY urls.id DESC;
-                """
-            )
-            urls = cur.fetchall()            
-
-        return render_template('urls.html', urls=urls)
+    all_urls = db.get_all_urls()
+    return render_template('urls.html', urls=all_urls)
 
 
 @app.post('/urls/<int:id>/checks')
 def check_url(id):
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                'SELECT name FROM urls WHERE id = %s',
-                (id,)
-            )
-            url_data = cur.fetchone()
+    url_data = db.get_url(id)
+    if not url_data:
+        abort(404)
 
-            if not url_data:
-                abort(404)
+    url = url_data['name']
 
-            url = url_data['name']
-
-            try:
-                response = requests.get(url, timeout=5)
-                response.raise_for_status()
-
-                html = response.text
-                soup = BeautifulSoup(html, 'html.parser')
-
-                h1 = soup.find('h1')
-                title = soup.find('title')
-                description = soup.find('meta', attrs={'name': 'description'})
-
-                h1_text = h1.get_text(strip=True)[:255] if h1 else None
-                title_text = title.get_text(strip=True)[:255] if title else None
-                description_text = (
-                    description['content'].strip()[:255] 
-                    if description and 'content' in description.attrs
-                    else None
-                )                
-            
-            except RequestException:
-                flash('Произошла ошибка при проверке', 'danger')
-                return redirect(url_for('show_url', id=id))
-            
-            cur.execute(
-                """
-                INSERT INTO url_checks (
-                    url_id, 
-                    status_code, 
-                    h1, 
-                    title, 
-                    description, 
-                    created_at
-                )
-                VALUES (%s, %s, %s, %s, %s, %s)
-                RETURNING id;
-                """,
-                (
-                    id, 
-                    response.status_code, 
-                    h1_text, 
-                    title_text, 
-                    description_text, 
-                    datetime.now())                
-            )
-            conn.commit()
-            
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        page_data = extract_page_data(response)
+    except RequestException:
+        flash('Произошла ошибка при проверке', 'danger')
+        return redirect(url_for('show_url', id=id))
+    
+    db.create_check(
+        url_id=id,
+        status_code=page_data['status_code'],
+        h1=page_data['h1'],
+        title=page_data['title'],
+        description=page_data['description'],
+        created_at=datetime.now()
+    )
+    
     flash('Страница успешно проверена', 'success')
     return redirect(url_for('show_url', id=id))
 
