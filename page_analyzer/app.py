@@ -30,24 +30,28 @@ def index():
 @app.post('/urls')
 def add_url():
     url = request.form.get('url')
-    index_html = render_template('index.html')
 
     if not url:
         flash('Требуется ввести URL', 'danger')
-        return index_html, 422
-    
+        return render_template('index.html'), 422
+
     url = url.strip()
-    
+
     if len(url) > 255:
         flash('URL должен быть меньше 255 символов', 'danger')
-        return index_html, 422    
-    
-    if not validators.url(url):
+        return render_template('index.html'), 422
+
+    try:
+        is_valid = validators.url(url)
+    except Exception:
+        is_valid = False
+
+    if is_valid is not True:
         flash('Некорректный URL', 'danger')
-        return index_html, 422
-    
+        return render_template('index.html'), 422
+
     normalized_url = normalize_url(url)
-    
+
     existing = db.url_exists(normalized_url)
     if existing:
         url_id = existing['id']
